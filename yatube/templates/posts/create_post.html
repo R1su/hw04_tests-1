@@ -1,27 +1,80 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %} {% if is_edit  %} Редактировать {% else %} Новый пост {% endif %} {% endblock %}
+{% block title %}
+    {% if post %}
+        <title> Редактировать пост </title>
+    {% else %}
+        <title> Новый пост </title>
+    {% endif %}
+
+{% endblock %}
 
 {% block content %}
-  <div class="row justify-content-center">
-    <div class="col-md-8 p-5">
-      <div class="card">
-        <div class="card-header">       
-          {% if is_edit %} Редактировать {% else %} Новый пост {% endif %}            
-        </div>
-        {% include 'includes/form_errors.html' %}
-        <div class="card-body">        
-          <form method="post" action="{% url 'posts:post_create' %}">
-            {% csrf_token %}
-            {% include 'includes/field_form.html' %}
-            <div class="d-flex justify-content-end">
-              <button type="submit" class="btn btn-primary">
-                Сохранить
-              </button>
+    {% load user_filters %}
+      <div class="container py-5">
+        <div class="row justify-content-center">
+        {% if form.errors %}
+              {% for field in form %}
+                {% for error in field.errors %}
+                  <div class="alert alert-danger">
+                    {{ error|escape }}
+                  </div>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <div class="alert alert-danger">
+                  {{ error|escape }}
+                </div>
+              {% endfor %}
+          {% endif %}
+          <div class="col-md-8 p-5">
+            <div class="card">
+              <div class="card-header">
+                {% if post %}
+                  Редактировать запись
+                {% else %}
+                  Добавить запись
+                {% endif %}
+              </div>
+              <div class="card-body">
+                <form method="post" enctype="multipart/form-data"
+                      {% if post %}
+                      action="{% url 'posts:post_edit' post.id %}"
+                      {% else %}
+                      action="{% url 'posts:post_create' %}"
+                      {% endif %}>
+                  {% csrf_token %}
+
+                  {% for field in form %}
+                     <div class="form-group row my-3 p-3">
+                       <label for="{{ field.id_for_label }}">
+                         {{ field.label }}
+                         {% if field.field.required %}
+                           <span class="required text-danger">*</span>
+                         {% endif %}
+                       </label>
+                       {{ field|addclass:'form-control' }}
+                       {% if field.help_text %}
+                          <small id="{{ field.id_for_label }}-help" class="form-text text-muted">
+                          {{ field.help_text|safe }}
+                          </small>
+                       {% endif %}
+                    </div>
+                  {% endfor %}
+
+                  <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">
+                      {% if post %}
+                        Сохранить
+                      {% else %}
+                        Добавить
+                      {% endif %}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 {% endblock %}
